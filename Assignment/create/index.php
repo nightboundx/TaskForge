@@ -8,6 +8,8 @@ $select_username = "webapp_select";
 $select_password = "lS4x!d4iH(DGeeTs";
 $insert_username = "webapp_insert";
 $insert_password = "E5O-R(n0JJor1BVZ";
+$update_username = "webapp_update";
+$update_password = "SauvaFd18[U*omq0";
 $database = "assessment2";
 
 // Establishing a new connection to the server for selecting data
@@ -41,11 +43,12 @@ if ($connInsert->connect_error) {
     die("Connection failed: " . $connInsert->connect_error);
 }
 
+
 // Check if the submit button has been clicked on the form
-if (isset($_POST['submit']) && isset($_SESSION['role'])) {
+if (isset($_POST['submit']) && isset($_SESSION['role_id'])) {
     // Check if the user is logged in and has the appropriate role
-    $allowed_roles = [2, 3]; // Users and admins
-    if (in_array($_SESSION['role'], $allowed_roles)) {
+    $allowed_roles = [2, 3];
+    if (in_array($_SESSION['role_id'], $allowed_roles)) {
         // Retrieve form data
         $TaskName = $_POST['TaskName'];
         $TaskDescription = $_POST['TaskDescription'];
@@ -58,13 +61,24 @@ if (isset($_POST['submit']) && isset($_SESSION['role'])) {
         $stmt = $connInsert->prepare($sql);
         $stmt->bind_param('issss', $UserID, $TaskName, $TaskCompletionDate, $TaskDescription, $TaskAssigned);
         if ($stmt->execute()) {
-            echo "Task added successfully!";
+            if ($stmt->affected_rows > 0) {
+                echo "Task added successfully!";
+            } else {
+                echo "No task was added. Please try again.";
+            }
         } else {
             echo "Error: " . $stmt->error;
         }
     } else {
-        echo "You are not authorised to create tasks.";
+        echo "You are not authorized to create tasks.";
     }
+}
+// Handle sign-out
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["signout"])) {
+    session_unset(); // Unset all session variables
+    session_destroy(); // Destroy the session
+    header("Location: ../login/index.php"); // Redirect to the login page
+    exit;
 }
 ?>
 
@@ -75,7 +89,6 @@ if (isset($_POST['submit']) && isset($_SESSION['role'])) {
     <title>Create Task</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <style>
-        <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -126,13 +139,29 @@ if (isset($_POST['submit']) && isset($_SESSION['role'])) {
 <body>
 <header>
     <h1>Create Task</h1>
-    <div class="button-container">
-        <a href="../welcome/index.php" class="btn-custom">Homepage</a>
-        <a href="../admin/index.php" class="btn-custom">Admin Page</a>
-        <a href="../view/index.php" class="btn-custom">View Tasks</a>
-        <a href="../create/index.php" class="btn-custom">Create Tasks</a>
+    <nav>
+        <ul>
+            <?php if (isset($_SESSION['user_id'])): ?>
+                <a href="../welcome/index.php" class="btn-custom">Homepage</a>
 
-    </div>
+                <?php if ($_SESSION['role_id'] == 3): ?>
+                    <a href="../admin/index.php" class="btn-custom">Admin</a>
+                <?php endif; ?>
+
+                <?php if (in_array($_SESSION['role_id'], [2, 3])): ?>
+                    <a href="../registration/index.php" class="btn-custom">Registration</a>
+                <?php endif; ?>
+
+                <?php if (in_array($_SESSION['role_id'], [1, 2, 3])): ?>
+                    <a href="../view/index.php" class="btn-custom">View Tasks</a>
+                <?php endif; ?>
+
+            <?php else: ?>
+                <a href="../login/index.php" class="btn-custom">Login</a>
+                <a href="../registration/index.php" class="btn-custom">Registration</a>
+            <?php endif; ?>
+        </ul>
+    </nav>
 </header>
 <main>
     <div class="container">
@@ -153,7 +182,7 @@ if (isset($_POST['submit']) && isset($_SESSION['role'])) {
                 <label for="TaskAssigned" class="form-label">Assigned To</label>
                 <select class="form-select" id="TaskAssigned" name="TaskAssigned">
                     <?php
-                    // Iterate through the user options array and generate dropdown options
+                    // Generate dropdown options using the $user_options array
                     foreach ($user_options as $userid => $username) {
                         echo '<option value="'.$userid.'">'.$username.'</option>';
                     }
@@ -165,10 +194,11 @@ if (isset($_POST['submit']) && isset($_SESSION['role'])) {
     </div>
 </main>
 <footer>
-    <form action="../login/index.php" method="post">
-        <button type="submit" class="btn-custom" name="signout">Logout</button>
-    </form>
+    <?php if (isset($_SESSION['user_id'])): ?>
+        <form action="" method="post">
+            <button type="submit" class="btn btn-danger" name="signout">Sign Out</button>
+        </form>
+    <?php endif; ?>
 </footer>
 </body>
 </html>
-

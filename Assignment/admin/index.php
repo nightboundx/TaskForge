@@ -14,7 +14,7 @@
             background-color: #333;
             padding: 10px 0;
             color: #fff;
-            text-align: center; /* Center align the text */
+            text-align: center;
             margin-bottom: 20px; /* Add margin bottom for spacing */
         }
         footer {
@@ -62,20 +62,19 @@
 
 <header>
     <h1>Administration Page</h1>
+    <div class="container">
+        <nav>
+            <ul class="d-flex justify-content-start"> <!-- Use Bootstrap flexbox utility classes -->
+                <a href="../welcome/index.php" class="btn btn-custom me-2">Homepage</a>
+                <a href="../registration/index.php" class="btn btn-custom me-2">Registration</a>
+                <a href="../view/index.php" class="btn btn-custom">View Tasks</a>
+                <a href="../create/index.php" class="btn btn-custom">Create Task</a>
+            </ul>
+        </nav>
 </header>
 
-<div class="container">
-    <nav>
-        <ul class="d-flex justify-content-start"> <!-- Use Bootstrap flexbox utility classes -->
-            <a href="../welcome/index.php" class="btn btn-custom me-2">Homepage</a>
-            <a href="../registration/index.php" class="btn btn-custom me-2">Registration</a>
-            <a href="../view/index.php" class="btn btn-custom">View Tasks</a>
-            <a href="../create/index.php" class="btn btn-custom">Create Task</a>
-        </ul>
-    </nav>
-
 <?php
-// Establishing a connection to the database for SELECT operations
+// Establishing a connection to the database for SELECT privileges
 $server_name = "localhost";
 $username = "webapp_select";
 $password = "lS4x!d4iH(DGeeTs";
@@ -85,7 +84,7 @@ if ($conn_select->connect_error) {
     die("Connection failed: " . $conn_select->connect_error);
 }
 
-// Establishing a connection to the database for UPDATE operations
+// Establishing a connection to the database for UPDATE privileges
 $update_username = "webapp_update";
 $update_password = "SauvaFd18[U*omq0";
 $conn_update = new mysqli($server_name, $update_username, $update_password, $database);
@@ -227,11 +226,6 @@ if (isset($_POST['modify_role'])) {
                     }
                     ?>
                 </select>
-                <!-- Button to submit form to display user credentials -->
-            </form>
-        </td>
-        <td>
-            <form method="POST">
                 <input type="submit" name="show_credentials" value="Show Credentials">
             </form>
         <td>
@@ -292,7 +286,10 @@ $conn_update->close();
 ?>
 </body>
 <footer>
-    <form action="../login/index.php" method="post">
-        <button type="submit" name="signout" class="btn btn-danger">Sign Out</button>
-    </form>
+    <?php if (isset($_SESSION['user_id'])): ?>
+        <form action="" method="post">
+            <button type="submit" class="btn btn-danger" name="signout">Sign Out</button>
+        </form>
+    <?php endif; ?>
+</footer>
 </html>

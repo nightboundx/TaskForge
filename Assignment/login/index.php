@@ -29,8 +29,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = $_POST["password"];
 
     // Retrieve user information from the database
-    $sql = "SELECT * FROM assessment2.users WHERE username = '$username'";
-    $result = $conn->query($sql);
+    $sql = "SELECT user_id, role_id, password FROM assessment2.users WHERE username = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
     if ($result->num_rows > 0) {
         $row = $result->fetch_assoc();
@@ -38,7 +41,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Verify the entered password against the stored hashed password
         if (password_verify($password, $row["password"])) {
             $_SESSION['user_id'] = $row['user_id'];
-            header("Location: ../welcome/index.php"); // Redirect the user to the welcome page
+            $_SESSION['role_id'] = $row['role_id'];
+
+            // Redirect the user based on their role_id
+            if ($row['role_id'] == 1) {
+                header("Location: ../welcome/index.php");
+            } elseif ($row['role_id'] == 2) {
+                header("Location: ../welcome/index.php");
+            } elseif ($row['role_id'] == 3) {
+                header("Location: ../admin/index.php");
+            } else {
+                header("Location: ../welcome/index.php");
+            }
             exit;
         } else {
             echo "Invalid password";
@@ -112,8 +126,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <ul>
             <?php if (isset($_SESSION['user_id'])): ?>
                 <a href="../welcome/index.php" class="btn btn-custom">Welcome</a>
-                <a href="../admin/index.php" class="btn btn-custom">Admin</a>
-                <a href="../registration/index.php" class="btn btn-custom">Registration</a>
+                <?php
+                if (isset($_SESSION['role_id']) && $_SESSION['role_id'] == 3): ?>
+                    <a href="../admin/index.php" class="btn btn-custom">Admin</a>
+                    <a href="../registration/index.php" class="btn btn-custom">Registration</a>
+                <?php endif; ?>
                 <a href="../view/index.php" class="btn btn-custom">View Tasks</a>
                 <a href="../create/index.php" class="btn btn-custom">Create Tasks</a>
             <?php endif; ?>
@@ -121,8 +138,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <?php if (isset($_SESSION['user_id'])): ?>
             <?php
             $user_id = $_SESSION['user_id'];
-            $sql = "SELECT username FROM assessment2.users WHERE user_id = $user_id";
-            $result = $conn->query($sql);
+            $sql = "SELECT username FROM assessment2.users WHERE user_id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("i", $user_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
             if ($result->num_rows > 0) {
                 $row = $result->fetch_assoc();
                 $logged_in_username = $row['username'];

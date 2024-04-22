@@ -46,6 +46,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;
     }
+
+    // Handle sign-out
+    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["signout"])) {
+        session_unset(); // Unset all session variables
+        session_destroy(); // Destroy the session
+        header("Location: ../login/index.php"); // Redirect to the login page
+        exit;
+    }
+
     $stmt->close();
     $conn->close();
 }
@@ -95,14 +104,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <header>
     <nav>
         <ul>
-            <?php if (!empty($_SESSION['user_id'])): ?>
-                <?php if ($is_admin): ?>
+            <?php if (isset($_SESSION['user_id'])): ?>
+                <?php if ($_SESSION['role_id'] == 3): ?>
                     <li><a href="../admin/index.php" class="btn-custom">Admin Page</a></li>
                 <?php endif; ?>
                 <li><a href="../login/index.php" class="btn-custom">Login Page</a></li>
             <?php endif; ?>
-            <li><a href="../view/index.php" class="btn-custom">View Tasks</a></li>
-            <?php if ($is_admin): ?>
+
+            <?php if (isset($_SESSION['user_id'])): ?>
+                <li><a href="../view/index.php" class="btn-custom">View Tasks</a></li>
+            <?php endif; ?>
+
+            <?php if (isset($_SESSION['user_id']) && in_array($_SESSION['role_id'], [2, 3])): ?>
                 <li><a href="../create/index.php" class="btn-custom">Create Tasks</a></li>
             <?php endif; ?>
         </ul>
@@ -139,11 +152,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </main>
 
 <footer>
-    <?php if ($is_admin): ?>
+    <?php
+    // Check if the user is logged in (role_id 1, 2, or 3)
+    if (isset($_SESSION['user_id']) && in_array($_SESSION['role_id'], [1, 2, 3])) {
+        ?>
         <form action="" method="post">
             <button type="submit" name="signout" class="btn btn-danger">Sign Out</button>
         </form>
-    <?php endif; ?>
+        <?php
+    }
+    ?>
 </footer>
 </body>
 </html>

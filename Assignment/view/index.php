@@ -25,6 +25,13 @@ if (!isset($_SESSION['user_id'])) {
     header("Location: ../login/index.php");
     exit;
 }
+// Handle sign-out
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["signout"])) {
+    session_unset(); // Unset all session variables
+    session_destroy(); // Destroy the session
+    header("Location: ../login/index.php"); // Redirect to the login page
+    exit;
+}
 
 // Get user role and status
 $user_id = $_SESSION['user_id'];
@@ -89,7 +96,7 @@ $is_admin = ($user_role === 'Admin');
             text-align: center;
         }
         .btn {
-            background-color: #007bff;
+            background-color: #007bff; // button css style for page
             color: #fff;
             border: none;
             border-radius: 5px;
@@ -99,7 +106,10 @@ $is_admin = ($user_role === 'Admin');
             cursor: pointer;
         }
         .btn:hover {
-            background-color: #0056b3;
+            background-color: #0056b3; // change button colour on hover
+        }
+        .btn-danger {
+            background-color: #dc3545 !important; // button wouldnt change to red, this is a workaround to recolour
         }
     </style>
 </head>
@@ -135,12 +145,27 @@ $is_admin = ($user_role === 'Admin');
     if ($result->num_rows > 0) {
         // Output data of each row
         while ($row = $result->fetch_assoc()) {
+            // Fetch the username based on the assigned user ID
+            $assignedUserId = $row["TaskAssigned"]; // retrieve the assigned user ID and store in new variable
+            $query = "SELECT username FROM users WHERE user_id = ?"; // SQL query to retrieve username based on user ID
+            $stmt = $conn->prepare($query); // prepare the SQL query
+            $stmt->bind_param("i", $assignedUserId); // bind the parameter to the SQL query to prevent injections
+            $stmt->execute(); // execute the SQL query
+            $userResult = $stmt->get_result(); // get the result of the SQL query
+
+            if ($userResult->num_rows > 0) { // check if there are any rows returned
+                $userRow = $userResult->fetch_assoc(); //   fetch the row
+                $assignedUsername = $userRow['username']; // store the username in a new variable
+            } else {
+                $assignedUsername = "User not found";
+            }
+
             echo "<tr>";
-            echo "<td>" . $row["Task Name"] . "</td>";
-            echo "<td>" . $row["Task Date"] . "</td>";
-            echo "<td>" . $row["Task Completion Date"] . "</td>";
-            echo "<td>" . $row["Task Description"] . "</td>";
-            echo "<td>" . $row["Assigned User"] . "</td>";
+            echo "<td>" . htmlspecialchars($row["TaskName"]);
+            echo "<td>" . htmlspecialchars($row["TaskDate"]);
+            echo "<td>" . htmlspecialchars($row["TaskCompletionDate"]);
+            echo "<td>" . htmlspecialchars($row["TaskDescription"]);
+            echo "<td>" . htmlspecialchars($assignedUsername);
             echo "</tr>";
         }
     } else {
@@ -150,9 +175,11 @@ $is_admin = ($user_role === 'Admin');
 </table>
 
 <footer>
-    <form action="../login/index.php" method="post">
-        <button type="submit" name="signout" class="btn btn-danger">Sign Out</button>
-    </form>
+    <?php if (isset($_SESSION['user_id'])): ?>
+        <form action="" method="post">
+            <button type="submit" class="btn btn-danger" name="signout">Sign Out</button>
+        </form>
+    <?php endif; ?>
 </footer>
 
 </body>

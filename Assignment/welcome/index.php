@@ -1,5 +1,6 @@
 <?php
-// Start session
+// Start session with cookies
+ini_set('session.use_cookies', 1);
 session_start();
 
 // Check if user is not logged in, redirect to login page
@@ -20,6 +21,13 @@ $conn = new mysqli($server_name, $username, $password, $database);
 // Check connection
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
+}
+// Handle sign-out
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["signout"])) {
+    session_unset(); // Unset all session variables
+    session_destroy(); // Destroy the session
+    header("Location: ../login/index.php"); // Redirect to the login page
+    exit;
 }
 
 // Get username and role for the logged-in user
@@ -140,9 +148,11 @@ $is_admin = ($user_role == 'Admin');
 </main>
 
 <footer>
-    <form action="../login/index.php" method="post">
-        <button type="submit" class="btn-custom" name="signout">Logout</button>
-    </form>
+    <?php if (isset($_SESSION['user_id'])): ?>
+        <form action="" method="post">
+            <button type="submit" class="btn btn-danger" name="signout">Sign Out</button>
+        </form>
+    <?php endif; ?>
 </footer>
 </body>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
