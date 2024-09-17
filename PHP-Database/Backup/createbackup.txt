@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Task</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+</head>
+<body>
+<form class="row g-3" action="" method="post">
+    <div class="col-auto">
+        <label class="visually-hidden">Task Name</label>
+        <input type="text" class="form-control" id="TaskName" name="TaskName" placeholder="Task Name">
+    </div>
+    <div class="col-auto">
+        <label class="visually-hidden">Task Description</label>
+        <textarea type="text" class="form-control" id="TaskDescription" name="TaskDescription" placeholder="Task Description"></textarea>
+    </div>
+    <div class="col-auto">
+        <label>Task Completion Date</label>
+        <input type="date" id="TaskCompletionDate" name="TaskCompletionDate">
+    </div>
+    <div class="col-auto">
+        <label>Task Priority</label>
+        <div class="col-auto">
+            <select class="form-select" aria-label="Task Priority" name="TaskPriority">
+                <option selected></option>
+                <option value="0">Low</option>
+                <option value="1">Medium</option>
+                <option value="2">High</option>
+            </select>
+        </div>
+    </div>
+    <div class="col-auto">
+        <label>Task Status</label>
+        <div class="col-auto">
+            <select class="form-select" aria-label="Task Status" name="TaskStatus">
+                <option selected></option>
+                <option value="0">Backlog</option>
+                <option value="1">In Progress</option>
+                <option value="2">Done</option>
+            </select>
+        </div>
+    </div>
+    <div class="col-auto">
+        <label class="visually-hidden">Task Assignee</label>
+        <input type="text" class="form-control" id="TaskAssignee" name="TaskAssignee" placeholder="Task Assignee">
+    </div>
+    <div class="col-auto">
+        <input type="submit" class="btn btn-primary mb-3" name="submit" placeholder="Submit">
+    </div>
+</form>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+</html>
+<?php
+//These values are for the connection to the SQL server
+$server_name = "localhost";
+$username = "webapp_insert";
+$password = "E5O-R(n0JJor1BVZ";
+
+//Establishing a new connection to the server
+$conn = new mysqli($server_name, $username, $password);
+
+if ($conn->connect_error){
+    die("Connection failed: " . $conn->connect_error);
+}
+
+//Checks to see if the submit button has been clicked on the form - otherwise, will not run SQL query (removes warnings from user)
+if(isset($_POST['submit'])){
+    $TaskName = $_POST['TaskName'];
+    $TaskDescription = $_POST['TaskDescription'];
+    $TaskCompletionDate = $_POST['TaskCompletionDate'];
+    $TaskPriority = $_POST['TaskPriority'];
+    $TaskStatus = $_POST['TaskStatus'];
+    //TaskAssignee currently hardcoded - will be available from dropdown once implemented.
+    $TaskAssignee = 1;
+    //User_id currently hardcoded - will be available from SESSION once implemented.
+    $user_id = 1;
+
+    $sql = "INSERT INTO credentials.tasks (`TaskName`,`TaskDescription`,`TaskCompletionDate`,`TaskPriority`,`TaskStatus`,`TaskAssignee`,`user_id`) VALUES (?,?,?,?,?,?,?)";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('sssssss',$TaskName,$TaskDescription,$TaskCompletionDate,$TaskPriority,$TaskStatus,$TaskAssignee,$user_id);
+    if($stmt->execute()){
+        echo "Task added successfully!";
+    }
+}
